@@ -1,0 +1,6 @@
+PyYAML
+SQLAlchemy
+psycopg2-binary
+pymysql
+pyodbc
+pandas
