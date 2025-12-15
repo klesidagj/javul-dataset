@@ -19,20 +19,61 @@ def safe_silhouette(X: np.ndarray, labels) -> float:
     except Exception:
         return None
 
-def knn_cv_acc(X: np.ndarray, labels, n_neighbors: int = 5) -> float:
-    labels = np.array(labels)
-    unique, counts = np.unique(labels, return_counts=True)
-    min_count = counts.min() if len(counts) > 0 else 0
-    n_splits = min(5, int(min_count)) if min_count >= 2 else 0
+def filter_labels(X, y, min_count=5):
+    counts = Counter(y)
+    mask = [counts[label] >= min_count for label in y]
+    return X[mask], y[mask]
+
+from collections import Counter
+import numpy as np
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
+
+
+def filter_labels(X, y, min_count=5):
+    """
+    Remove samples whose class appears fewer than `min_count` times.
+    """
+    counts = Counter(y)
+    mask = np.array([counts[label] >= min_count for label in y])
+    return X[mask], y[mask]
+
+
+def knn_cv_accuracy(X, y, n_neighbors=5, max_folds=5, min_class_count=5,):
+    """
+    Safe KNN cross-validation accuracy.
+    Returns NaN if not statistically valid.
+    """
+    X_f, y_f = filter_labels(X, y, min_class_count)
+
+    if len(set(y_f)) < 2:
+        return float("nan")
+
+    # Determine safe number of folds
+    class_counts = Counter(y_f)
+    n_splits = min(max_folds, min(class_counts.values()))
+
     if n_splits < 2:
-        return None
-    try:
-        skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
-        knn = KNeighborsClassifier(n_neighbors=n_neighbors)
-        scores = cross_val_score(knn, X, labels, cv=skf, scoring='accuracy', n_jobs=1)
-        return float(scores.mean())
-    except Exception:
-        return None
+        return float("nan")
+
+    cv = StratifiedKFold(
+        n_splits=n_splits,
+        shuffle=True,
+        random_state=42,
+    )
+
+    knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+
+    scores = cross_val_score(
+        knn,
+        X_f,
+        y_f,
+        cv=cv,
+        scoring="accuracy",
+        n_jobs=1,
+    )
+
+    return float(scores.mean())
 
 def nn_local_agreement(X: np.ndarray, labels, k: int = 1) -> float:
     labels = np.array(labels)

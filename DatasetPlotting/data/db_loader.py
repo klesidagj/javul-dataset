@@ -3,19 +3,19 @@
 """
 DB / CSV loading utilities.
 """
-from typing import Optional, Dict
+from sqlalchemy import create_engine
 import pandas as pd
-import psycopg2
 
-def load_from_db(sql: str, db_config: Dict, limit: Optional[int] = None) -> pd.DataFrame:
-    if limit:
-        sql = sql.strip().rstrip(';') + f"\nLIMIT {limit};"
-    conn = psycopg2.connect(**db_config)
-    try:
-        df = pd.read_sql(sql, conn)
-    finally:
-        conn.close()
-    return df
+def make_pg_uri(cfg: dict) -> str:
+    return (
+        f"postgresql+psycopg2://{cfg['user']}:{cfg['password']}"
+        f"@{cfg['host']}:{cfg['port']}/{cfg['dbname']}"
+    )
+
+def load_from_db(sql: str, db_cfg: dict) -> pd.DataFrame:
+    uri = make_pg_uri(db_cfg)
+    engine = create_engine(uri)
+    return pd.read_sql(sql, engine)
 
 def load_from_csv(path: str) -> pd.DataFrame:
     return pd.read_csv(path)
