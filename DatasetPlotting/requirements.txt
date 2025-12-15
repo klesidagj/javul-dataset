@@ -1,0 +1,8 @@
+# --- FILE: requirements.txt ---
+numpy
+pandas
+scikit-learn
+umap-learn
+matplotlib
+psycopg2-binary
+tqdm
