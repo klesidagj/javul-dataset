@@ -18,10 +18,10 @@ def main():
     pca = None
     all_raw_cls = []
 
-    print("\n### STEP 1 — Extract ALL CLS vectors for PCA training ###")
+    print("\n### STEP 1 — Extract ALL CLS vectors for PCA train ###")
     print("Device:", "cuda" if torch.cuda.is_available() else "cpu")
     print("MPS:", torch.backends.mps.is_available())
-    # First pass: extract raw 768-d vectors for PCA training
+    # First pass: extract raw 768-d vectors for PCA train
     while True:
         rows = fetch_code_snippets(POSTGRES_CONN, TABLE_NAME, ID_COL, CODE_COL,
                                    limit=BATCH_SIZE, offset=offset)
